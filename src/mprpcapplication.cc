@@ -3,6 +3,8 @@
 #include "unistd.h"
 #include <string>
 
+MprpcConfig MprpcApplication::m_config;
+
 void ShowArgsHelp() {
     std::cout << "Usage: command -i <config_file>" << std::endl;
 }
@@ -27,6 +29,7 @@ void MprpcApplication::Init(int argc, char **argv) {
             exit(EXIT_FAILURE);
         }
     }
+    m_config.LoadConfigFile(config_file.c_str());
 }
 
 MprpcApplication &MprpcApplication::GetInstance() {

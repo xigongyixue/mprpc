@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.0)
 project(mprpc)
 
+# 生成debug版，可以gdb调试
+set(CAMKE_BUILD_TYPE "Debug")
+
 # 可执行文件输出路径
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 # 库文件输出路径
@@ -13,3 +16,4 @@ include_directories(${PROJECT_SOURCE_DIR}/example)
 link_directories(${PROJECT_SOURCE_DIR}/lib)
 
 add_subdirectory(src)
+add_subdirectory(example)
