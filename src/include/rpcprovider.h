@@ -8,5 +8,5 @@ class RpcProvider {
         void NotifyService(google::protobuf::Service *service);
 
         // 启动rpc服务节点
-        void Run() {}
+        void Run();
 };
