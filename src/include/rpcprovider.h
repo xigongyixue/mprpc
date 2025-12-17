@@ -1,11 +1,17 @@
 #pragma once
 
-#include "google/protobuf/service.h"
-#include <memory> 
+#include <memory>
+#include <string>
+#include <functional>
+#include <unordered_map>
+
 #include <muduo/net/TcpServer.h>
 #include <muduo/net/EventLoop.h>
 #include <muduo/net/InetAddress.h>
 #include <muduo/net/TcpConnection.h>
+
+#include <google/protobuf/descriptor.h>
+#include <google/protobuf/service.h>
 
 
 // 框架提供的专门服务发布rpc服务的网络对象类
@@ -18,6 +24,15 @@ class RpcProvider {
         void Run();
     private:
         muduo::net::EventLoop event_loop;
+
+        // 服务类型信息
+        struct ServiceInfo {
+            google::protobuf::Service *service; // 服务对象
+            std::unordered_map<std::string, const google::protobuf::MethodDescriptor*> methods; // 服务方法
+        };
+
+        // 注册成功的服务对象和其方法信息
+        std::unordered_map<std::string, ServiceInfo> services; 
 
         // 新的socket连接到来时，回调此函数
         void OnConnection(const muduo::net::TcpConnectionPtr& conn);

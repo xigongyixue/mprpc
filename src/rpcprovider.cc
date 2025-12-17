@@ -1,12 +1,32 @@
 #include "rpcprovider.h"
 #include "mprpcapplication.h"
 
-#include <string>
-#include <functional>
+// service_name -> serviceInfo <service对象, {<method_name,method方法对象>···}
 
 // 发布rpc服务
 void RpcProvider::NotifyService(google::protobuf::Service *service){
 
+    ServiceInfo service_info;
+
+    // 获取服务对象描述信息
+    const google::protobuf::ServiceDescriptor* service_descriptor = service->GetDescriptor();
+    // 获取服务名字
+    std::string server_name = service_descriptor->name();
+    // 获取服务对象方法数量
+    int method_count = service_descriptor->method_count();
+
+    std::cout << "service_name: " << server_name << std::endl;
+
+    for(int i = 0; i < method_count; i++) {
+        // 获取服务对象指定下标服务方法描述信息
+        const google::protobuf::MethodDescriptor* method_descriptor = service_descriptor->method(i);
+        std::string method_name = method_descriptor->name();
+        service_info.methods.insert({method_name, method_descriptor});
+
+        std::cout << "method_name: " << method_name << std::endl;
+    }
+    service_info.service = service;
+    services.insert({server_name, service_info});
 }
 
 // 启动rpc服务节点
@@ -24,7 +44,7 @@ void RpcProvider::Run() {
     // 设置muduo库的线程数量
     server.setThreadNum(4);
     
-    std:: cout << "Rpc服务启动成功, 监听地址 " << ip << ":" << port << std::endl;
+    std:: cout << "Rpc services is listening on " << ip << ":" << port << std::endl;
     // 启动服务器
     server.start();
     event_loop.loop();
