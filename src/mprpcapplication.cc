@@ -32,7 +32,11 @@ void MprpcApplication::Init(int argc, char **argv) {
     m_config.LoadConfigFile(config_file.c_str());
 }
 
-MprpcApplication &MprpcApplication::GetInstance() {
+MprpcApplication& MprpcApplication::GetInstance() {
     static MprpcApplication app;
     return app;
+}
+
+MprpcConfig& MprpcApplication::GetConfig() {
+    return m_config;
 }
