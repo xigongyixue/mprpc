@@ -1,5 +1,6 @@
 #include "rpcprovider.h"
 #include "mprpcapplication.h"
+#include "rpcheader.pb.h"
 
 // service_name -> serviceInfo <service对象, {<method_name,method方法对象>···}
 
@@ -37,6 +38,7 @@ void RpcProvider::Run() {
 
     // 创建TcpServer对象
     muduo::net::TcpServer server(&event_loop, address, "RpcProvider");
+
     // 绑定连接回调和消息读写回调方法 分离了网络代码和业务代码
     server.setConnectionCallback(std::bind(&RpcProvider::OnConnection, this, std::placeholders::_1)); // std::placeholders::_1 表示函数的第一个参数
     server.setMessageCallback(std::bind(&RpcProvider::OnMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
@@ -52,10 +54,49 @@ void RpcProvider::Run() {
 
 // 新的socket连接到来时，回调此函数
 void RpcProvider::OnConnection(const muduo::net::TcpConnectionPtr& conn) {
-
+    if(!conn->connected()) {
+        // 与rpc client断开连接
+        conn->shutdown();
+    }
 }
+
+/*
+content: service_name method_name args
+format: header_size(4B)+header_str+args_str
+*/
 
 // 已建立连接用户得到读写事件，回调此函数
 void RpcProvider::OnMessage(const muduo::net::TcpConnectionPtr& conn, muduo::net::Buffer* buf, muduo::Timestamp receive_time) {
+    // 网络上接受的远程rpc调用请求的字节流
+    std::string recv_buf = buf->retrieveAllAsString();
+
+    // 拷贝4个字节到header_size变量中
+    uint32_t header_size = 0;
+    recv_buf.copy((char*)&header_size, 4, 0);
+
+    // 读取数据头的原始字符流
+    std::string rpc_header_str = recv_buf.substr(4, header_size); // service_name + method_name + args_size
+    mprpc::RpcHeader rpc_header;
+    std::string service_name, method_name;
+    uint32_t args_size;
+    if(rpc_header.ParseFromString(rpc_header_str)) { // 反序列化
+        service_name = rpc_header.service_name();
+        method_name = rpc_header.method_name();
+        args_size = rpc_header.args_size();
+    } else {
+        std::cout << "rpc header str: " << rpc_header_str << " parse error!" << std::endl;
+        return;
+    }
+
+    // 读取参数的原始字符流
+    std::string args_str = recv_buf.substr(4 + header_size, args_size);
+
+    // 打印
+    std::cout << "=====================================================" << std::endl;
+    std::cout << "service_name: " << service_name << std::endl;
+    std::cout << "method_name: " << method_name << std::endl;
+    std::cout << "args_size: " << args_size << std::endl;
+    std::cout << "args_str: " << args_str << std::endl;
+    std::cout << "=====================================================" << std::endl;
 
 }
