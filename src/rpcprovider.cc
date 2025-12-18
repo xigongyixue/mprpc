@@ -99,4 +99,42 @@ void RpcProvider::OnMessage(const muduo::net::TcpConnectionPtr& conn, muduo::net
     std::cout << "args_str: " << args_str << std::endl;
     std::cout << "=====================================================" << std::endl;
 
+    // 获取service对象和method对象
+    if(services.find(service_name) == services.end()) {
+        std::cout << service_name << "service not found!" << std::endl;
+        return;
+    }
+    
+    if(services[service_name].methods.find(method_name) == services[service_name].methods.end()) {
+        std::cout << service_name << ":" << method_name << "method not found!" << std::endl;
+        return;
+    }
+
+    google::protobuf::Service *service = services[service_name].service;
+    const google::protobuf::MethodDescriptor *method = services[service_name].methods[method_name];
+
+    // 生成rpc方法调用的请求和响应
+    google::protobuf::Message *request = service->GetRequestPrototype(method).New();
+    if(!request->ParseFromString(args_str)) {
+        std::cout << "request parse error, content:" << args_str << std::endl;
+        return;
+    }
+    google::protobuf::Message *response = service->GetResponsePrototype(method).New();
+
+    // 调用rpc方法
+    google::protobuf::Closure *done = google::protobuf::NewCallback<RpcProvider, const muduo::net::TcpConnectionPtr&, google::protobuf::Message*>
+                                                                    (this, &RpcProvider::SendRpcResponse, conn, response);
+    service->CallMethod(method, NULL, request, response, done);
+
+}
+
+ // 发送rpc响应
+void RpcProvider::SendRpcResponse(const muduo::net::TcpConnectionPtr& conn, google::protobuf::Message* response) {
+    std::string response_str;
+    if(response->SerializeToString(&response_str)) { // 序列化
+        conn->send(response_str);
+    } else {
+        std::cout << "response serialize error!" << std::endl;
+    }
+    conn->shutdown(); // 主动断开连接
 }

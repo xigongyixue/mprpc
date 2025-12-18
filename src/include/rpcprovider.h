@@ -39,4 +39,7 @@ class RpcProvider {
 
         // 已建立连接用户得到读写事件，回调此函数
         void OnMessage(const muduo::net::TcpConnectionPtr& conn, muduo::net::Buffer* buf, muduo::Timestamp receive_time);
+
+        // 发送rpc响应
+        void SendRpcResponse(const muduo::net::TcpConnectionPtr& conn, google::protobuf::Message* response);
 };
