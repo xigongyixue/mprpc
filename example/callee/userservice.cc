@@ -14,6 +14,11 @@ class UserService : public UserServiceRpc {
             return true;
         }
 
+        bool Register(uint32_t id, std::string name, std::string pwd) {
+            std::cout << "Register: " << id << ", " << name << ", " << pwd << std::endl;
+            return true;
+        }
+
         // 重写UserServiceRpc虚函数
         // 1. caller -> Login(LoginRequest) -> muduo -> callee
         // 2. caller -> Login(LoginRequest) -> Login() 下面这个函数
@@ -32,6 +37,21 @@ class UserService : public UserServiceRpc {
             response->set_success(login_result);
 
             // 执行回调
+            done->Run();
+        }
+
+        void Register(::google::protobuf::RpcController* controller, const ::fixbug::RegisterRequest* request, ::fixbug::RegisterResponse* response, ::google::protobuf::Closure* done) {
+            uint32_t id = request->id();
+            std::string name = request->name();
+            std::string pwd = request->pwd();
+
+            bool register_result = Register(id, name, pwd);
+
+            ResultCode *code = response->mutable_result();
+            code->set_errcode(0);
+            code->set_errmsg("");
+            response->set_success(register_result);
+
             done->Run();
         }
 };

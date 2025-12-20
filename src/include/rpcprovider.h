@@ -13,7 +13,6 @@
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/service.h>
 
-
 // 框架提供的专门服务发布rpc服务的网络对象类
 class RpcProvider {
     public:

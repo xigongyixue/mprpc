@@ -91,8 +91,7 @@ void MprpcChannel::CallMethod(const ::google::protobuf::MethodDescriptor* method
         return;
     }
 
-    std::string response_str(buf, 0, recv_size);
-    if(!response->ParseFromString(response_str)) {
+    if(!response->ParseFromArray(buf, recv_size)) {
         std::cout << "parse response failed!" << std::endl;
         close(client_fd);
         return;

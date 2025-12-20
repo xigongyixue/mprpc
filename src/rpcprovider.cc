@@ -1,6 +1,7 @@
 #include "rpcprovider.h"
 #include "mprpcapplication.h"
 #include "rpcheader.pb.h"
+#include "logger.h"
 
 // service_name -> serviceInfo <service对象, {<method_name,method方法对象>···}
 
@@ -12,11 +13,11 @@ void RpcProvider::NotifyService(google::protobuf::Service *service){
     // 获取服务对象描述信息
     const google::protobuf::ServiceDescriptor* service_descriptor = service->GetDescriptor();
     // 获取服务名字
-    std::string server_name = service_descriptor->name();
+    std::string service_name = service_descriptor->name();
     // 获取服务对象方法数量
     int method_count = service_descriptor->method_count();
 
-    std::cout << "service_name: " << server_name << std::endl;
+    LOG_INFO("service name: %s", service_name.c_str());
 
     for(int i = 0; i < method_count; i++) {
         // 获取服务对象指定下标服务方法描述信息
@@ -24,10 +25,10 @@ void RpcProvider::NotifyService(google::protobuf::Service *service){
         std::string method_name = method_descriptor->name();
         service_info.methods.insert({method_name, method_descriptor});
 
-        std::cout << "method_name: " << method_name << std::endl;
+        LOG_INFO("method name: %s", method_name.c_str());
     }
     service_info.service = service;
-    services.insert({server_name, service_info});
+    services.insert({service_name, service_info});
 }
 
 // 启动rpc服务节点
